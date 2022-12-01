@@ -14,7 +14,7 @@ pub fn main(data: &str) -> anyhow::Result<(usize, usize)>  {
     cargo.sort_by_key(|c| -(*c as isize));
 
     let max_calories = cargo[0];
-    let top_three = cargo[..3].iter().sum();
+    let top_three = cargo.iter().take(3).sum();
     Ok((max_calories, top_three))
 }
 
