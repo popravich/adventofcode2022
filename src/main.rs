@@ -10,7 +10,7 @@ use advent2022::{
 static DAY1: &str = include_str!("./input/day01.txt");
 static DAY2: &str = include_str!("./input/day02.txt");
 static DAY3: &str = include_str!("./input/day03.txt");
-static DAY4: &str = include_str!("./input/day01.txt");
+static DAY4: &str = include_str!("./input/day04.txt");
 
 fn main() -> anyhow::Result<()> {
     let day = env::args()
@@ -34,9 +34,9 @@ fn main() -> anyhow::Result<()> {
             println!("#2: Priorities sum of badges: {}", answer2);
         }
         4 => {
-            let (answer1, answer2) = day4::main(DAY4);
-            println!("#1: {}", answer1);
-            println!("#2: {}", answer2);
+            let (answer1, answer2) = day4::main(DAY4)?;
+            println!("#1: fully contains: {}", answer1);
+            println!("#2: overlaps: {}", answer2);
         }
         _ => unimplemented!(),
     }
