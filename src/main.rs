@@ -5,12 +5,15 @@ use advent2022::{
     day2,
     day3,
     day4,
+    day5,
 };
 
 static DAY1: &str = include_str!("./input/day01.txt");
 static DAY2: &str = include_str!("./input/day02.txt");
 static DAY3: &str = include_str!("./input/day03.txt");
 static DAY4: &str = include_str!("./input/day04.txt");
+static DAY5: &str = include_str!("./input/day05.txt");
+
 
 fn main() -> anyhow::Result<()> {
     let day = env::args()
@@ -35,6 +38,11 @@ fn main() -> anyhow::Result<()> {
         }
         4 => {
             let (answer1, answer2) = day4::main(DAY4)?;
+            println!("#1: fully contains: {}", answer1);
+            println!("#2: overlaps: {}", answer2);
+        }
+        5 => {
+            let (answer1, answer2) = day5::main(DAY5)?;
             println!("#1: fully contains: {}", answer1);
             println!("#2: overlaps: {}", answer2);
         }
