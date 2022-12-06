@@ -11,15 +11,12 @@ fn find_unique_charset(input: &[u8], size: usize) -> anyhow::Result<usize> {
     .windows(size)
     .enumerate()
     .skip_while(|(_, window)| {
-        let mut bits = 0u32;
-        for byte in &window[..] {
-            let idx = 1 << byte.checked_sub(b'a').expect("invalid char, not a-z");
-            if bits & idx == idx {
-                return true
-            }
-            bits |= idx;
-        }
-        false
+        window
+        .iter()
+        .fold(0u32, |mask, byte| {
+            mask | 1 << byte.checked_sub(b'a').expect("invalid char, not a-z")
+        })
+        .count_ones() as usize != size
     })
     .map(|(idx, _)| idx)
     .next()
