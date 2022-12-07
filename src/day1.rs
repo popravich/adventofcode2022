@@ -1,11 +1,11 @@
-pub fn main(data: &str) -> anyhow::Result<(usize, usize)>  {
+pub fn main(data: &str) -> anyhow::Result<(usize, usize)> {
     let mut cargo = Vec::new();
     let mut calories = 0usize;
     for line in data.lines() {
         if line.is_empty() {
             cargo.push(calories);
             calories = 0usize;
-            continue
+            continue;
         }
         calories += line.parse::<usize>()?;
     }
@@ -23,20 +23,8 @@ mod test {
     use super::main;
 
     static DATA: &str = concat!(
-        "1000\n",
-        "2000\n",
-        "3000\n",
-        "\n",
-        "4000\n",
-        "\n",
-        "5000\n",
-        "6000\n",
-        "\n",
-        "7000\n",
-        "8000\n",
-        "9000\n",
-        "\n",
-        "10000\n",
+        "1000\n", "2000\n", "3000\n", "\n", "4000\n", "\n", "5000\n", "6000\n", "\n", "7000\n",
+        "8000\n", "9000\n", "\n", "10000\n",
     );
 
     #[test]
@@ -45,5 +33,4 @@ mod test {
         assert_eq!(a, 24000);
         assert_eq!(b, 45000);
     }
-
 }

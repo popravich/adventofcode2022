@@ -4,7 +4,9 @@ pub fn main(data: &str) -> anyhow::Result<(usize, usize)> {
     let mut part1 = 0;
     let mut part2 = 0;
     for line in data.lines() {
-        let (range1, range2) = line.split_once(',').ok_or(anyhow::anyhow!("invalid input"))?;
+        let (range1, range2) = line
+            .split_once(',')
+            .ok_or(anyhow::anyhow!("invalid input"))?;
         let range1: Range = range1.parse()?;
         let range2: Range = range2.parse()?;
         if range1.contains(&range2) || range2.contains(&range1) {
@@ -13,7 +15,6 @@ pub fn main(data: &str) -> anyhow::Result<(usize, usize)> {
         if range1.overlaps(&range2) {
             part2 += 1;
         }
-
     }
     Ok((part1, part2))
 }

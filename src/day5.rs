@@ -1,6 +1,7 @@
-
 pub fn main(data: &str) -> anyhow::Result<(String, String)> {
-    let (crates, moves) = data.split_once("\n\n").ok_or(anyhow::anyhow!("\n\n was not found"))?;
+    let (crates, moves) = data
+        .split_once("\n\n")
+        .ok_or(anyhow::anyhow!("\n\n was not found"))?;
     let mut lines = crates.lines().rev();
     let n = lines
         .next()
@@ -9,12 +10,11 @@ pub fn main(data: &str) -> anyhow::Result<(String, String)> {
     assert!(n < 10, "Assumption failed, found more than 9 columns");
     let mut stacks = vec![String::new(); n];
 
-    let crate_indices = lines
-        .flat_map(|line| {
-            (0..n)
-                .filter_map(|idx| line.chars().nth(idx * 4 + 1).map(|c| (idx, c)))
-                .filter(|(_, c)| *c != ' ')
-        });
+    let crate_indices = lines.flat_map(|line| {
+        (0..n)
+            .filter_map(|idx| line.chars().nth(idx * 4 + 1).map(|c| (idx, c)))
+            .filter(|(_, c)| *c != ' ')
+    });
 
     for (idx, c) in crate_indices {
         stacks[idx].push(c);
@@ -23,9 +23,11 @@ pub fn main(data: &str) -> anyhow::Result<(String, String)> {
     let mut stacks2 = stacks.clone();
 
     for line in moves.lines() {
-        let (count, address) = &line[5..].split_once(" from ")
+        let (count, address) = &line[5..]
+            .split_once(" from ")
             .ok_or(anyhow::anyhow!("expected ' from ' in move command"))?;
-        let (src, dst) = address.split_once(" to ")
+        let (src, dst) = address
+            .split_once(" to ")
             .ok_or(anyhow::anyhow!("expected ' to ' in move command"))?;
         let count: usize = count.parse()?;
         let src: usize = src.parse::<usize>()? - 1;

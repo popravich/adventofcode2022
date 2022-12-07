@@ -1,12 +1,13 @@
-
 pub fn main(data: &str) -> anyhow::Result<(usize, usize)> {
     let mut part1: usize = 0;
     for line in data.lines() {
         let mut split = line.split(' ').take(2);
-        let a = split.next()
+        let a = split
+            .next()
             .map(|l| Hand::from_known(l))
             .ok_or(anyhow::anyhow!("Bad input line"))?;
-        let b = split.next()
+        let b = split
+            .next()
             .map(|l| Hand::from_guessed(l))
             .ok_or(anyhow::anyhow!("Bad input line"))?;
         part1 += b.score_over(&a);
@@ -16,10 +17,12 @@ pub fn main(data: &str) -> anyhow::Result<(usize, usize)> {
     let mut part2: usize = 0;
     for line in data.lines() {
         let mut split = line.split(' ').take(2);
-        let a = split.next()
+        let a = split
+            .next()
             .map(|l| Hand::from_known(l))
             .ok_or(anyhow::anyhow!("Bad input line"))?;
-        let b = split.next()
+        let b = split
+            .next()
             .map(|l| RoundResult::from_str(l))
             .ok_or(anyhow::anyhow!("Bad input line"))?;
         let hand = b.get_hand(&a);
@@ -28,7 +31,6 @@ pub fn main(data: &str) -> anyhow::Result<(usize, usize)> {
     }
     Ok((part1, part2))
 }
-
 
 #[derive(Clone, Copy)]
 enum Hand {
@@ -92,8 +94,8 @@ impl RoundResult {
         }
     }
     fn get_hand(&self, other: &Hand) -> Hand {
-        use RoundResult::*;
         use Hand::*;
+        use RoundResult::*;
         match (self, other) {
             (Win, Rock) => Paper,
             (Win, Scissors) => Rock,
@@ -110,11 +112,7 @@ impl RoundResult {
 mod test {
     use super::main;
 
-    static DATA: &str = concat!(
-        "A Y\n",
-        "B X\n",
-        "C Z\n",
-    );
+    static DATA: &str = concat!("A Y\n", "B X\n", "C Z\n",);
 
     #[test]
     fn solution() {

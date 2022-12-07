@@ -1,20 +1,20 @@
-
 pub fn main(data: &str) -> anyhow::Result<(usize, usize)> {
-    let part1 = data.lines().filter_map(|line| {
-        let n = line.len() / 2;
-        let (left, right) = line.split_at(n);
-        left.chars()
-            .take(n)
-            .filter(|c| right.contains(*c))
-            .next()
-    }).collect::<String>();
+    let part1 = data
+        .lines()
+        .filter_map(|line| {
+            let n = line.len() / 2;
+            let (left, right) = line.split_at(n);
+            left.chars().take(n).filter(|c| right.contains(*c)).next()
+        })
+        .collect::<String>();
 
     let mut lines = data.lines();
     let mut part2 = 0;
     while let Some(first) = lines.next() {
         let second = lines.next().ok_or(anyhow::anyhow!("invalid input"))?;
         let third = lines.next().ok_or(anyhow::anyhow!("invalid input"))?;
-        let c = first.chars()
+        let c = first
+            .chars()
             .filter(|c| second.contains(*c))
             .filter(|c| third.contains(*c))
             .next()
@@ -26,9 +26,7 @@ pub fn main(data: &str) -> anyhow::Result<(usize, usize)> {
 }
 
 fn score(s: &str) -> usize {
-    s.chars()
-    .map(|c| char_score(c) as usize)
-    .sum()
+    s.chars().map(|c| char_score(c) as usize).sum()
 }
 
 fn char_score(c: char) -> u8 {

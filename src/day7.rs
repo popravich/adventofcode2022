@@ -1,14 +1,12 @@
-use std::str;
-use std::collections::BTreeMap;
 use anyhow::anyhow as err;
-
+use std::collections::BTreeMap;
+use std::str;
 
 const PART1_THRESHOLD: usize = 100_000;
 const TOTAL_SPACE: usize = 70_000_000;
 const NEED_SPACE: usize = 30_000_000;
 
 pub fn main(data: &str) -> anyhow::Result<(usize, usize)> {
-
     let mut cur_path = Path::new();
     let mut tree = BTreeMap::new();
     let mut stdout = data.lines().map(Line::from_str);
@@ -33,7 +31,7 @@ pub fn main(data: &str) -> anyhow::Result<(usize, usize)> {
             }
             _ => {}
         }
-    };
+    }
 
     let mut part1 = 0;
     for size in tree.values() {
@@ -76,13 +74,8 @@ enum Cd<'a> {
 
 #[derive(Debug)]
 enum LsOutput<'a> {
-    Dir {
-        name: &'a str,
-    },
-    File {
-        size: usize,
-        name: &'a str,
-    }
+    Dir { name: &'a str },
+    File { size: usize, name: &'a str },
 }
 
 #[derive(Debug)]
@@ -100,14 +93,13 @@ impl<'a> Line<'a> {
 }
 
 impl<'a> Command<'a> {
-    fn from_str(val: &'a str ) -> anyhow::Result<Command<'a>>
-    {
+    fn from_str(val: &'a str) -> anyhow::Result<Command<'a>> {
         let result = if val.starts_with("cd ") {
             Command::Cd(Cd::from_str(&val[3..]))
         } else if val == "ls" {
             Command::Ls
         } else {
-            return Err(err!("unexpected command {}", val))
+            return Err(err!("unexpected command {}", val));
         };
         Ok(result)
     }
@@ -153,18 +145,19 @@ impl<'a> Path<'a> {
         self.0.pop();
     }
 
-    fn pathes_to_root(&'a self) -> impl Iterator<Item=String> + 'a {
+    fn pathes_to_root(&'a self) -> impl Iterator<Item = String> + 'a {
         (0..self.0.len())
             .rev()
             .map(|n| self.0[0..self.0.len() - n].join("/"))
-            .map(|path| if path.is_empty() {
-                "/".to_string()
-            } else {
-                path
+            .map(|path| {
+                if path.is_empty() {
+                    "/".to_string()
+                } else {
+                    path
+                }
             })
     }
 }
-
 
 #[cfg(test)]
 mod test {
