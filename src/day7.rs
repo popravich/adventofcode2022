@@ -24,10 +24,7 @@ pub fn main(data: &str) -> anyhow::Result<(usize, usize)> {
                 cur_path.push(name);
             }
             Line::Output(LsOutput::File { size, .. }) => {
-                tree.entry(cur_path.to_string_lossy().into_owned())
-                    .and_modify(|total| *total += size)
-                    .or_insert(size);
-                let mut parent = cur_path.parent();
+                let mut parent = Some(cur_path.as_path());
                 while let Some(p) = parent {
                     parent = p.parent();
                     tree.entry(p.to_string_lossy().into_owned())
