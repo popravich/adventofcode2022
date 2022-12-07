@@ -1,5 +1,6 @@
 use anyhow::anyhow as err;
 use std::collections::BTreeMap;
+use std::path::PathBuf;
 use std::str;
 
 const PART1_THRESHOLD: usize = 100_000;
@@ -7,14 +8,14 @@ const TOTAL_SPACE: usize = 70_000_000;
 const NEED_SPACE: usize = 30_000_000;
 
 pub fn main(data: &str) -> anyhow::Result<(usize, usize)> {
-    let mut cur_path = Path::new();
+    let mut cur_path = PathBuf::new();
     let mut tree = BTreeMap::new();
     let mut stdout = data.lines().map(Line::from_str);
     while let Some(line) = stdout.next() {
         let line = line?;
         match line {
             Line::Input(Command::Cd(Cd::Root)) => {
-                cur_path.root();
+                cur_path.push("/");
             }
             Line::Input(Command::Cd(Cd::Up)) => {
                 cur_path.pop();
@@ -23,8 +24,13 @@ pub fn main(data: &str) -> anyhow::Result<(usize, usize)> {
                 cur_path.push(name);
             }
             Line::Output(LsOutput::File { size, .. }) => {
-                for abs_path in cur_path.pathes_to_root() {
-                    tree.entry(abs_path)
+                tree.entry(cur_path.to_string_lossy().into_owned())
+                    .and_modify(|total| *total += size)
+                    .or_insert(size);
+                let mut parent = cur_path.parent();
+                while let Some(p) = parent {
+                    parent = p.parent();
+                    tree.entry(p.to_string_lossy().into_owned())
                         .and_modify(|total| *total += size)
                         .or_insert(size);
                 }
@@ -78,9 +84,6 @@ enum LsOutput<'a> {
     File { size: usize, name: &'a str },
 }
 
-#[derive(Debug)]
-struct Path<'a>(Vec<&'a str>);
-
 impl<'a> Line<'a> {
     fn from_str(val: &'a str) -> anyhow::Result<Line<'a>> {
         let res = if val.starts_with("$ ") {
@@ -126,36 +129,6 @@ impl<'a> LsOutput<'a> {
             LsOutput::File { size, name }
         };
         Ok(res)
-    }
-}
-
-impl<'a> Path<'a> {
-    fn new() -> Self {
-        Path(Vec::new())
-    }
-    fn push(&mut self, sub: &'a str) {
-        self.0.push(sub)
-    }
-    fn root(&mut self) {
-        self.0.clear();
-        self.0.push("");
-    }
-
-    fn pop(&mut self) {
-        self.0.pop();
-    }
-
-    fn pathes_to_root(&'a self) -> impl Iterator<Item = String> + 'a {
-        (0..self.0.len())
-            .rev()
-            .map(|n| self.0[0..self.0.len() - n].join("/"))
-            .map(|path| {
-                if path.is_empty() {
-                    "/".to_string()
-                } else {
-                    path
-                }
-            })
     }
 }
 
