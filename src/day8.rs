@@ -33,6 +33,8 @@ impl Grid {
         (self.width + self.height()) * 2 - 4
     }
 
+    /// Creates two iterators of items to the left and to the right of specified cell,
+    /// excluding the element itself.
     fn left_right_ray(&self, row: usize, col: usize)
         -> (impl Iterator<Item=u8> + '_, impl Iterator<Item=u8> + '_)
     {
@@ -46,6 +48,7 @@ impl Grid {
             self.data[idx..end].iter().skip(1).copied(),
         )
     }
+    /// Same as left_right_ray but up and down.
     fn up_down_ray(&self, row: usize, col: usize)
         -> (impl Iterator<Item=u8> + '_, impl Iterator<Item=u8> + '_)
     {
