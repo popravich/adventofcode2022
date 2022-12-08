@@ -9,8 +9,6 @@ pub fn main(data: &str) -> anyhow::Result<(usize, usize)> {
         .filter(|(row, col)| grid.is_visible(*row, *col))
         .count();
 
-    grid.view_distance(1, 2);
-    println!("xxx");
     let part2 = (1..grid.height() - 1)
         .flat_map(|row| (1..grid.width - 1).map(move |col| (row, col)))
         .map(|(row, col)| grid.view_distance(row, col))
