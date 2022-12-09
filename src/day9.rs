@@ -112,34 +112,24 @@ impl Knot {
 }
 
 impl Position {
-    fn move_to(&self, other: &Self) -> DirectionIterator {
-        DirectionIterator { p0: *self, p1: *other }
-    }
-
     fn step(&mut self, dir: Direction) {
         use Direction::*;
-        match dir {
-            Up => self.y += 1,
-            Right => self.x += 1,
-            Down => self.y -= 1,
-            Left => self.x -= 1,
-            UpRight => {
-                self.step(Direction::Up);
-                self.step(Direction::Right);
-            }
-            UpLeft => {
-                self.step(Direction::Up);
-                self.step(Direction::Left);
-            }
-            DownRight => {
-                self.step(Direction::Down);
-                self.step(Direction::Right);
-            }
-            DownLeft => {
-                self.step(Direction::Down);
-                self.step(Direction::Left);
-            }
-        }
+        let (x, y) = match dir {
+            Up => (0, 1),
+            Right => (1, 0),
+            Down => (0, -1),
+            Left => (-1, 0),
+            UpRight => (1, 1),
+            UpLeft => (-1, 1),
+            DownRight => (1, -1),
+            DownLeft => (-1, -1),
+        };
+        self.x += x;
+        self.y += y;
+    }
+
+    fn move_to(&self, other: &Self) -> DirectionIterator {
+        DirectionIterator { p0: *self, p1: *other }
     }
 }
 
