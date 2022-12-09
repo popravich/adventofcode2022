@@ -64,23 +64,6 @@ enum Direction {
     DownRight,
 }
 
-impl Direction {
-    fn horizontal(dx: i64) -> Option<Self> {
-        match dx {
-            0 => None,
-            i if i > 0 => Some(Direction::Right),
-            _ => Some(Direction::Left),
-        }
-    }
-    fn vertical(dy: i64) -> Option<Self> {
-        match dy {
-            0 => None,
-            i if i > 0 => Some(Direction::Up),
-            _ => Some(Direction::Down),
-        }
-    }
-}
-
 struct Dt(Direction, u8);
 
 impl str::FromStr for Dt {
@@ -146,15 +129,22 @@ impl Iterator for DirectionIterator {
             None
         } else {
             use Direction::*;
-            let dir = match (Direction::horizontal(dx), Direction::vertical(dy)) {
-                (None, None) => None,
-                (None, Some(x)) => Some(x),
-                (Some(x), None) => Some(x),
-                (Some(Right), Some(Up)) => Some(UpRight),
-                (Some(Left), Some(Up)) => Some(UpLeft),
-                (Some(Right), Some(Down)) => Some(DownRight),
-                (Some(Left), Some(Down)) => Some(DownLeft),
-                _ => unreachable!()
+            let dir = match dx {
+                0 => match dy {
+                    0 => None,
+                    y if y > 0 => Some(Up),
+                    _ => Some(Down),
+                }
+                x if x > 0 => match dy {
+                    0 => Some(Right),
+                    y if y > 0 => Some(UpRight),
+                    _ => Some(DownRight),
+                }
+                _ => match dy {
+                    0 => Some(Left),
+                    y if y > 0 => Some(UpLeft),
+                    _ => Some(DownLeft),
+                }
             };
             if let Some(dir) = dir {
                 self.p0.step(dir);
