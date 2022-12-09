@@ -4,10 +4,20 @@ use std::f64::consts;
 use std::collections::HashSet;
 
 pub fn main(data: &str) -> anyhow::Result<(usize, usize)> {
-    let mut visited = HashSet::new();
+    let mut visited_p1 = HashSet::new();
+    let mut visited_p2 = HashSet::new();
     let mut head = Knot::default();
-    let mut tail = Knot::default();
-    visited.insert(tail.pos);
+    let mut tail_p1 = Knot::default();
+    let mut knot_2 = Knot::default();
+    let mut knot_3 = Knot::default();
+    let mut knot_4 = Knot::default();
+    let mut knot_5 = Knot::default();
+    let mut knot_6 = Knot::default();
+    let mut knot_7 = Knot::default();
+    let mut knot_8 = Knot::default();
+    let mut tail_p2 = Knot::default();
+    visited_p1.insert(tail_p1.pos);
+    visited_p2.insert(tail_p2.pos);
     let input = data.lines()
         .map(|line| {
                 line.parse::<Dt>()
@@ -17,10 +27,18 @@ pub fn main(data: &str) -> anyhow::Result<(usize, usize)> {
         .flatten();
     for direction in input {
         head.step(direction);
-        visited.insert(tail.move_towards(&head));
+        visited_p1.insert(tail_p1.move_towards(&head));
+        knot_2.move_towards(&tail_p1);
+        knot_3.move_towards(&knot_2);
+        knot_4.move_towards(&knot_3);
+        knot_5.move_towards(&knot_4);
+        knot_6.move_towards(&knot_5);
+        knot_7.move_towards(&knot_6);
+        knot_8.move_towards(&knot_7);
+        visited_p2.insert(tail_p2.move_towards(&knot_8));
     }
 
-    Ok((visited.len(), 0))
+    Ok((visited_p1.len(), visited_p2.len()))
 }
 
 #[derive(Debug, Default, Copy, Clone, PartialEq, Eq, Hash)]
@@ -29,7 +47,7 @@ struct Position{
     y: i64,
 }
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Copy, Clone)]
 struct Knot {
     pos: Position,
 }
@@ -40,6 +58,27 @@ enum Direction {
     Right,
     Down,
     Left,
+    UpLeft,
+    UpRight,
+    DownLeft,
+    DownRight,
+}
+
+impl Direction {
+    fn horizontal(dx: i64) -> Option<Self> {
+        match dx {
+            0 => None,
+            i if i > 0 => Some(Direction::Right),
+            _ => Some(Direction::Left),
+        }
+    }
+    fn vertical(dy: i64) -> Option<Self> {
+        match dy {
+            0 => None,
+            i if i > 0 => Some(Direction::Up),
+            _ => Some(Direction::Down),
+        }
+    }
 }
 
 struct Dt(Direction, u8);
@@ -74,7 +113,7 @@ impl Knot {
 
 impl Position {
     fn move_to(&self, other: &Self) -> DirectionIterator {
-        DirectionIterator { x0: self.x, y0: self.y, x1: other.x, y1: other.y }
+        DirectionIterator { p0: *self, p1: *other }
     }
 
     fn step(&mut self, dir: Direction) {
@@ -84,57 +123,53 @@ impl Position {
             Right => self.x += 1,
             Down => self.y -= 1,
             Left => self.x -= 1,
+            UpRight => {
+                self.step(Direction::Up);
+                self.step(Direction::Right);
+            }
+            UpLeft => {
+                self.step(Direction::Up);
+                self.step(Direction::Left);
+            }
+            DownRight => {
+                self.step(Direction::Down);
+                self.step(Direction::Right);
+            }
+            DownLeft => {
+                self.step(Direction::Down);
+                self.step(Direction::Left);
+            }
         }
     }
 }
 
 struct DirectionIterator {
-    x0: i64,
-    y0: i64,
-    x1: i64,
-    y1: i64,
+    p0: Position,
+    p1: Position,
 }
 impl Iterator for DirectionIterator {
     type Item = Direction;
     fn next(&mut self) -> Option<Self::Item> {
-        let dx = self.x1 - self.x0;
-        let dy = self.y1 - self.y0;
+        let dx = self.p1.x - self.p0.x;
+        let dy = self.p1.y - self.p0.y;
         if ((dy * dy + dx * dx) as f64).sqrt() <= consts::SQRT_2 {
             None
-        } else if dx.abs() > dy.abs() {
-            self.move_dy(dy).or_else(|| self.move_dx(dx))
-        } else if dy.abs() > dx.abs() {
-            self.move_dx(dx).or_else(|| self.move_dy(dy))
         } else {
-            unreachable!("dx == dx: {} {}", dx, dy);
-        }
-    }
-}
-impl DirectionIterator {
-    fn move_dx(&mut self, dx: i64) -> Option<Direction> {
-        match dx {
-            0 => None,
-            x if x > 0 => {
-                self.x0 += 1;
-                Some(Direction::Right)
+            use Direction::*;
+            let dir = match (Direction::horizontal(dx), Direction::vertical(dy)) {
+                (None, None) => None,
+                (None, Some(x)) => Some(x),
+                (Some(x), None) => Some(x),
+                (Some(Right), Some(Up)) => Some(UpRight),
+                (Some(Left), Some(Up)) => Some(UpLeft),
+                (Some(Right), Some(Down)) => Some(DownRight),
+                (Some(Left), Some(Down)) => Some(DownLeft),
+                _ => unreachable!()
+            };
+            if let Some(dir) = dir {
+                self.p0.step(dir);
             }
-            _ => {
-                self.x0 -= 1;
-                Some(Direction::Left)
-            }
-        }
-    }
-    fn move_dy(&mut self, dy: i64) -> Option<Direction> {
-        match dy {
-            0 => None,
-            y if y > 0 => {
-                self.y0 += 1;
-                Some(Direction::Up)
-            }
-            _ => {
-                self.y0 -= 1;
-                Some(Direction::Down)
-            }
+            dir
         }
     }
 }
@@ -152,9 +187,23 @@ D 1
 L 5
 R 2"#;
 
+    static DATA2: &str = r#"R 5
+U 8
+L 8
+D 3
+R 17
+D 10
+L 25
+U 20"#;
+
     #[test]
-    fn solution() {
-        let res = main(DATA).expect("invalid input");
-        assert_eq!(res, (13, 0));
+    fn solution1() {
+        let (part1, _) = main(DATA).expect("invalid input");
+        assert_eq!(part1, 13);
+    }
+    #[test]
+    fn solution2() {
+        let (_, part2) = main(DATA2).expect("invalid input");
+        assert_eq!(part2, 36);
     }
 }
