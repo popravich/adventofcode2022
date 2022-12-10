@@ -1,6 +1,6 @@
 use std::env;
 
-use advent2022::{day1, day2, day3, day4, day5, day6, day7, day8, day9};
+use advent2022::{day1, day2, day3, day4, day5, day6, day7, day8, day9, day10};
 
 static DAY1: &str = include_str!("./input/day01.txt");
 static DAY2: &str = include_str!("./input/day02.txt");
@@ -11,6 +11,7 @@ static DAY6: &str = include_str!("./input/day06.txt");
 static DAY7: &str = include_str!("./input/day07.txt");
 static DAY8: &str = include_str!("./input/day08.txt");
 static DAY9: &str = include_str!("./input/day09.txt");
+static DAY10: &str = include_str!("./input/day10.txt");
 
 fn main() -> anyhow::Result<()> {
     let day = env::args()
@@ -60,6 +61,11 @@ fn main() -> anyhow::Result<()> {
         }
         9 => {
             let (answer1, answer2) = day9::main(DAY9)?;
+            println!("#1: {}", answer1);
+            println!("#2: {}", answer2);
+        }
+        10 => {
+            let (answer1, answer2) = day10::main(DAY10)?;
             println!("#1: {}", answer1);
             println!("#2: {}", answer2);
         }
