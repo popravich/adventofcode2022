@@ -67,7 +67,7 @@ fn main() -> anyhow::Result<()> {
         10 => {
             let (answer1, answer2) = day10::main(DAY10)?;
             println!("#1: {}", answer1);
-            println!("#2: {}", answer2);
+            println!("#2:\n{}", answer2);
         }
         _ => unimplemented!(),
     }

@@ -1,4 +1,4 @@
-pub fn main(data: &str) -> anyhow::Result<(i64, i64)> {
+pub fn main(data: &str) -> anyhow::Result<(i64, String)> {
     let part1 = data.lines()
         .into_elves_cpu_cmd_iterator()
         .enumerate()
@@ -7,7 +7,38 @@ pub fn main(data: &str) -> anyhow::Result<(i64, i64)> {
         .step_by(40)
         .map(|(tick, x)| (tick as i64) * x)
         .sum();
-    Ok((part1, 0))
+
+    let mut prev_x = 1;
+    let mut sprite = 7u64 << 3; // initialy sprite is vissible;
+    let mask: u64 = 0b1111_1111_1111_1111_1111_1111_1111_1111_1111_1111_000;
+    let mut screen = [' '; 6*41];
+    for i in 0..6 {
+        screen[i * 41 + 40] = '\n';
+    }
+    for (idx, x) in data.lines().into_elves_cpu_cmd_iterator().enumerate() {
+        let (row, col) = (idx / 40, idx % 40);
+        if prev_x != x {
+            if x > 0 {
+                sprite = (7u64 << 2) << x;
+            } else {
+                sprite = (7u64 << 2) >> x.abs();
+            }
+            prev_x = x;
+        }
+        let pixel = (mask & sprite) >> 3;
+        let is_lit = pixel & (1 << col) > 0;
+        // println!("CRT: {} {} {} {}", row, col, x, is_lit);
+        if is_lit {
+            screen[row * 41 + col] = '#';
+        }
+    }
+
+    let part2 = screen.iter().collect::<String>();
+    println!("---------");
+    print!("{}", part2);
+    println!("---------");
+
+    Ok((part1, part2))
 }
 
 struct ElvesCpuCommands<'a, I>
@@ -241,7 +272,14 @@ noop"#;
     #[test]
     fn solution() {
         let res = main(DATA).expect("invalid input");
-        assert_eq!(res, (13140, 0));
+        let part2 = r#"##..##..##..##..##..##..##..##..##..##..
+###...###...###...###...###...###...###.
+####....####....####....####....####....
+#####.....#####.....#####.....#####.....
+######......######......######......####
+#######.......#######.......#######.....
+"#.to_string();
+        assert_eq!(res, (13140, part2));
     }
 }
 
