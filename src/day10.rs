@@ -9,25 +9,26 @@ pub fn main(data: &str) -> anyhow::Result<(i64, String)> {
         .sum();
 
     let mut prev_x = 1;
-    let mut sprite = 7u64 << 3; // initialy sprite is vissible;
-    let mask: u64 = 0b1111_1111_1111_1111_1111_1111_1111_1111_1111_1111_000;
+    let mut sprite = 7u64; // initialy sprite is vissible;
+    let mask: u64 = 0b1111_1111_1111_1111_1111_1111_1111_1111_1111_1111;
     let mut screen = [' '; 6*41];
     for i in 0..6 {
         screen[i * 41 + 40] = '\n';
     }
     for (idx, x) in data.lines().into_elves_cpu_cmd_iterator().enumerate() {
-        let (row, col) = (idx / 40, idx % 40);
         if prev_x != x {
             if x > 0 {
-                sprite = (7u64 << 2) << x;
+                sprite = (7u64 << x) >> 1;
             } else {
-                sprite = (7u64 << 2) >> x.abs();
+                sprite = (7u64 >> x.abs()) >> 1;
             }
             prev_x = x;
         }
-        let pixel = (mask & sprite) >> 3;
-        let is_lit = pixel & (1 << col) > 0;
+        let pixel = mask & sprite;
         // println!("CRT: {} {} {} {}", row, col, x, is_lit);
+
+        let (row, col) = (idx / 40, idx % 40);
+        let is_lit = pixel & (1 << col) > 0;
         if is_lit {
             screen[row * 41 + col] = '#';
         }
