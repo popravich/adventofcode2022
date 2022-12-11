@@ -11,7 +11,7 @@ pub fn main(data: &str) -> anyhow::Result<(i64, String)> {
     let mut prev_x = 1;
     let mut sprite = 7u64; // initialy sprite is vissible;
     let mask: u64 = 0b1111_1111_1111_1111_1111_1111_1111_1111_1111_1111;
-    let mut screen = [' '; 6*41];
+    let mut screen = ['.'; 6*41];
     for i in 0..6 {
         screen[i * 41 + 40] = '\n';
     }
