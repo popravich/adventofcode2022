@@ -26,9 +26,9 @@ pub fn main(data: &str) -> anyhow::Result<(usize, usize)> {
     let mut counts = [0].repeat(monkeys.len());
     for _ in 0..20 {
         for idx in 0..monkeys.len() {
-            while let Some(x) = monkeys[idx].items.pop() {
+            while let Some(n) = monkeys[idx].items.pop() {
                 counts[idx] += 1;
-                let (i, x) = monkeys[idx].inspect(x, 3);
+                let (i, x) = monkeys[idx].inspect(n);
                 monkeys[i].items.push(x);
             }
         }
@@ -36,11 +36,15 @@ pub fn main(data: &str) -> anyhow::Result<(usize, usize)> {
     counts.sort();
     let part1 = counts.iter().rev().take(2).product();
 
+    let modulus = monkeys2.iter()
+        .map(|m| m.divisible_by)
+        .fold(1, |a, b| a * b);
     for _ in 0..10_000 {
         for idx in 0..monkeys2.len() {
-            while let Some(x) = monkeys2[idx].items.pop() {
+            while !monkeys2[idx].items.is_empty() {
+                let n = monkeys2[idx].items.remove(0);
                 counts2[idx] += 1;
-                let (i, x) = monkeys2[idx].inspect(x, 1);
+                let (i, x) = monkeys2[idx].inspect_v2(n, modulus);
                 monkeys2[i].items.push(x);
             }
         }
@@ -59,14 +63,9 @@ struct Monkey {
     on_false: usize,
 }
 impl Monkey {
-    fn inspect(&self, item: i64, relief: i64) -> (usize, i64) {
-        let out = match self.operation {
-            Operation::Add(Arg::Old) => item + item,
-            Operation::Add(Arg::Val(x)) => item + x,
-            Operation::Mult(Arg::Old) => item * item,
-            Operation::Mult(Arg::Val(x)) => item * x,
-        };
-        let out = out / relief;
+    fn inspect(&self, item: i64) -> (usize, i64) {
+        let out = self.operation.apply(item);
+        let out = out / 3;
         let idx = if out % self.divisible_by == 0 {
             self.on_true
         } else {
@@ -74,12 +73,34 @@ impl Monkey {
         };
         (idx, out)
     }
+
+    fn inspect_v2(&self, item: i64, modulus: i64) -> (usize, i64) {
+        let out = self.operation.apply(item);
+        let idx = if out % self.divisible_by == 0 {
+            self.on_true
+        } else {
+            self.on_false
+        };
+        (idx, out % modulus)
+    }
 }
 
 #[derive(Debug, Clone, Copy)]
 enum Operation {
     Add(Arg),
     Mult(Arg),
+}
+impl Operation {
+    fn apply(&self, item: i64) -> i64 {
+        use Operation::*;
+        use Arg::*;
+        match self {
+            Add(Old) => item + item,
+            Add(Val(x)) => item + x,
+            Mult(Old) => item * item,
+            Mult(Val(x)) => item * x,
+        }
+    }
 }
 #[derive(Debug, Clone, Copy)]
 enum Arg {
