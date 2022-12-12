@@ -36,15 +36,13 @@ pub fn main(data: &str) -> anyhow::Result<(usize, usize)> {
     counts.sort();
     let part1 = counts.iter().rev().take(2).product();
 
-    let modulus = monkeys2.iter()
-        .map(|m| m.divisible_by)
-        .fold(1, |a, b| a * b);
+    let lcm = monkeys2.iter().map(|m| m.divisible_by).product();
     for _ in 0..10_000 {
         for idx in 0..monkeys2.len() {
             while !monkeys2[idx].items.is_empty() {
                 let n = monkeys2[idx].items.remove(0);
                 counts2[idx] += 1;
-                let (i, x) = monkeys2[idx].inspect_v2(n, modulus);
+                let (i, x) = monkeys2[idx].inspect_v2(n, lcm);
                 monkeys2[i].items.push(x);
             }
         }
@@ -74,14 +72,14 @@ impl Monkey {
         (idx, out)
     }
 
-    fn inspect_v2(&self, item: i64, modulus: i64) -> (usize, i64) {
+    fn inspect_v2(&self, item: i64, lcm: i64) -> (usize, i64) {
         let out = self.operation.apply(item);
         let idx = if out % self.divisible_by == 0 {
             self.on_true
         } else {
             self.on_false
         };
-        (idx, out % modulus)
+        (idx, out % lcm)
     }
 }
 
