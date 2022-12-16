@@ -1,4 +1,6 @@
 use std::str;
+use std::fmt::Debug;
+use std::cmp;
 
 pub fn main(data: &str) -> anyhow::Result<(usize, usize)> {
     let mut part1 = 0;
@@ -7,8 +9,8 @@ pub fn main(data: &str) -> anyhow::Result<(usize, usize)> {
         let (range1, range2) = line
             .split_once(',')
             .ok_or(anyhow::anyhow!("invalid input"))?;
-        let range1: Range = range1.parse()?;
-        let range2: Range = range2.parse()?;
+        let range1: Range<u64> = range1.parse()?;
+        let range2: Range<u64> = range2.parse()?;
         if range1.contains(&range2) || range2.contains(&range1) {
             part1 += 1;
         }
@@ -19,12 +21,13 @@ pub fn main(data: &str) -> anyhow::Result<(usize, usize)> {
     Ok((part1, part2))
 }
 
-struct Range {
-    start: u64,
-    end: u64,
+#[derive(Debug)]
+pub struct Range<T: Debug> {
+    pub start: T,
+    pub end: T,
 }
 
-impl str::FromStr for Range {
+impl str::FromStr for Range<u64> {
     type Err = anyhow::Error;
 
     fn from_str(val: &str) -> anyhow::Result<Self> {
@@ -34,14 +37,34 @@ impl str::FromStr for Range {
         Ok(Range { start, end })
     }
 }
+impl<T> From<(T, T)> for Range<T>
+where
+    T: Ord + Copy + Debug,
+{
+    fn from((start, end): (T, T)) -> Self {
+        Range { start, end }
+    }
+}
 
-impl Range {
-    fn contains(&self, other: &Self) -> bool {
+impl<T> Range<T>
+where
+    T: Ord + Copy + Debug,
+{
+    pub fn contains(&self, other: &Self) -> bool {
         other.start >= self.start && other.end <= self.end
     }
 
-    fn overlaps(&self, other: &Self) -> bool {
+    pub fn overlaps(&self, other: &Self) -> bool {
         !(self.end < other.start || self.start > other.end)
+    }
+    pub fn overlaps_inclusive(&self, other: &Self) -> bool {
+        let start = cmp::max(self.start, other.start);
+        let end = cmp::min(self.end, other.end);
+        end >= start
+    }
+
+    pub fn contains_point(&self, x: &T) -> bool {
+        (self.start..=self.end).contains(x)
     }
 }
 
