@@ -1,9 +1,10 @@
 use std::str;
 use std::collections::{HashSet, HashMap, VecDeque};
-use std::io::{self, Write};
+use std::io;
 use std::{thread, time};
 
 use anyhow::anyhow as err;
+use crate::graph;
 
 pub fn main(data: &str) -> anyhow::Result<(usize, usize)> {
     let map: Map = data.parse()?;
@@ -17,28 +18,29 @@ pub fn main(data: &str) -> anyhow::Result<(usize, usize)> {
         .ok_or_else(|| err!("could not find path"))?;
     let dt2 = t0.elapsed();
 
-    Graphics::draw_map(&map)?;
+    draw_map(&map)?;
+
     let path = bms(&map, map.start(), map.end(), true)
     // let path = build_path(&map, map.start(), map.end(), false)
         .ok_or_else(|| err!("could not find path"))?;
 
     let result1 = rebuild_path(path, map.end());
-    Graphics::draw_path(&map, &result1, Graphics::RED, false)?;
+    draw_path(&map, &result1, graph::COLOR_RED, false)?;
 
     thread::sleep(time::Duration::from_secs(5));
 
-    Graphics::draw_map(&map)?;
+    draw_map(&map)?;
     let path = build_path(&map, map.start(), map.end(), true)
         .ok_or_else(|| err!("could not find path"))?;
 
     let result = rebuild_path(path, map.end());
-    Graphics::draw_path(&map, &result, Graphics::GREEN, false)?;
+    draw_path(&map, &result, graph::COLOR_GREEN, false)?;
 
     thread::sleep(time::Duration::from_secs(2));
 
-    Graphics::draw_map(&map)?;
-    Graphics::draw_path(&map, &result1, Graphics::RED, true)?;
-    Graphics::draw_path(&map, &result, Graphics::GREEN, true)?;
+    draw_map(&map)?;
+    draw_path(&map, &result1, graph::COLOR_RED, true)?;
+    draw_path(&map, &result, graph::COLOR_GREEN, true)?;
     println!("\x1b[{};1HDone", map.height + 1);
 
     println!("Bms: RED:   took: {:?}", dt1);
@@ -49,22 +51,17 @@ pub fn main(data: &str) -> anyhow::Result<(usize, usize)> {
         .flat_map(|y| (0..map.width).into_iter().map(move |x| Point { x, y }))
         .filter(|p| map.h(p) == 0)
         .collect();
-    // println!("starting points: {}", starts.len());
 
     let mut min = usize::MAX;
-    for (i, start) in starts.into_iter().enumerate() {
+    for start in starts.into_iter() {
         if let Some(path) = bms(&map, start, map.end(), false) {
             let path = rebuild_path(path, map.end());
             let steps = path.len();
             if steps < min {
                 min = steps;
-                // Graphics::draw_map(&map)?;
-                // Graphics::draw_path(&map, &path)?;
             }
-            // println!("\x1b[{};1H Test #{}", map.height + 1, i);
         }
     }
-    // println!("\x1b[{};1H\nDone", map.height + 1);
 
     Ok((result.len() - 1, min - 1))
 }
@@ -98,7 +95,8 @@ fn bms(map: &Map, start: Point, goal: Point, draw: bool) -> Option<HashMap<Point
             result.insert(n, p);
             queue.push_back(n);
             if draw {
-                Graphics::highlight(n, (map.h(&n) + b'a') as char).ok();
+                graph::delay_draw_char(
+                    n.x, n.y, ((map.h(&n) + b'a') as char, graph::HIGHLIGHT)).ok();
             }
         }
     }
@@ -133,37 +131,22 @@ fn build_path(map: &Map, start: Point, goal: Point, draw: bool) -> Option<HashMa
         if current == goal {
             return Some(path)
         }
-        // println!("checking neighbours of {:?}", current);
-        // println!("todo: {:?}", todo);
         for n in current.allowed_neigbours(map) {
-            // println!("   {:?}", n);
             let score = g_scores
                 .get(&current)
                 .map(|s| s + 1)
                 .expect("current has score");
-            // println!("   {:?} -> {}", n, score);
             if score < *g_scores.get(&n).unwrap_or(&isize::MAX) {
                 path.insert(n, current.clone());
                 g_scores.insert(n, score);
                 f_scores.insert(n, score); // + h_score(&n, &goal));
                 todo.insert(n);
                 if draw {
-                    Graphics::highlight(n, (map.h(&n) + b'a') as char).ok();
+                    graph::delay_draw_char(
+                        n.x, n.y, ((map.h(&n) + b'a') as char, graph::HIGHLIGHT)).ok();
                 }
             }
         }
-        
-        /*
-        for y in 0..map.height {
-            for x in 0..map.width {
-                let p = Point { x, y };
-                let c = (map.data[y * map.width + x] + b'a') as char;
-                if path.contains_key(&p) {
-                    print!("\x1b[{};{}H\x1b[1m{}\x1b[0m", y+1, x+1, c);
-                }
-            }
-        }
-        */
     }
     None
 }
@@ -253,57 +236,31 @@ impl Point {
     }
 }
 
-struct Graphics;
+// Drawing stuf...
 
-impl Graphics {
-    const CLR: &str = "\x1bc";
-    const START: &str = "\x1b[31mS\x1b[0m";
-    const END: &str = "\x1b[31mE\x1b[0m";
-
-    const RED: u8 = 31;
-    const GREEN: u8 = 32;
-
-    fn draw_map(map: &Map) -> io::Result<()> {
-        let mut stdout = io::stdout();
-        stdout.write(Graphics::CLR.as_bytes())?;
-        for y in 0..map.height {
-            for x in 0..map.width {
-                let p = Point { x, y };
-                let c = (map.h(&p) + b'a') as char;
-                if map.start() == p {
-                    stdout.write(Graphics::START.as_bytes())?;
-                } else if p == map.end() {
-                    stdout.write(Graphics::END.as_bytes())?;
-                } else {
-                    write!(stdout, "\x1b[2m{}\x1b[0m", c)?;
-                }
-            }
-            stdout.write(b"\n")?;
+fn draw_map(map: &Map) -> io::Result<()> {
+    graph::draw_map(map.width, map.height, |offset| {
+        let c = (map.data[offset] + b'a') as char;
+        let s = map.start();
+        let e = map.end();
+        if offset == s.y * map.width + s.x {
+            ('S', graph::COLOR_RED)
+        } else if offset == e.y * map.width + e.x {
+            ('E', graph::COLOR_RED)
+        } else {
+            (c, graph::SHADE)
         }
-        stdout.flush()
-    }
+    })
+}
 
-    fn draw_path<'a, I>(map: &Map, result: I, color: u8, slow: bool) -> io::Result<()>
-    where
-        I: IntoIterator<Item=&'a Point>,
-    {
-        let mut stdout = io::stdout();
-        for p in result {
-            let c = (map.h(p) + b'a') as char;
-            if slow {
-                thread::sleep(time::Duration::from_millis(10));
-                stdout.flush()?;
-            }
-            write!(stdout, "\x1b[{};{}H\x1b[{}m{}\x1b[0m", p.y+1, p.x+1, color, c)?;
+fn draw_path(map: &Map, path: &[Point], modifier: graph::Modifier, slow: bool) -> io::Result<()> {
+    graph::draw_path(map.width, path.iter().map(|p| (p.x, p.y)), move |offset| {
+        if slow {
+            thread::sleep(time::Duration::from_millis(10));
         }
-        write!(stdout, "\x1b[{};1H", map.height + 1)?;
-        stdout.flush()
-    }
-    fn highlight(p: Point, c: char) -> io::Result<()> {
-        thread::sleep(time::Duration::from_millis(1));
-        write!(io::stdout(), "\x1b[{};{}H\x1b[1m{}\x1b[0m", p.y+1, p.x+1, c)?;
-        io::stdout().flush()
-    }
+        let c = (map.data[offset] + b'a') as char;
+        (c, modifier, slow)
+    })
 }
 
 #[cfg(test)]
