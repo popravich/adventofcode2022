@@ -25,6 +25,10 @@ pub fn main(data: &str) -> anyhow::Result<(usize, usize)> {
     let mut moves_iter = moves.iter().cycle();
     let mut field1 = Field::new();
     for shape in shapes.iter().cycle().take(PART1_SHAPES) {
+        for _ in 0..3 {
+            let shift = moves_iter.next().expect("corrupted cycle iterator");
+            field1.shift_to_unchecked(*shift, &shape);
+        }
         loop {
             let shift = moves_iter.next().ok_or_else(|| err!("endless iter"))?;
             field1.shift_to(*shift, shape); 
@@ -35,22 +39,38 @@ pub fn main(data: &str) -> anyhow::Result<(usize, usize)> {
         field1.record(shape);
         // println!("{}", PrettyBits(&field.field));
     }
-    println!("{}", PrettyBits(&field1.field));
+    // println!("{}", PrettyBits(&field1.field));
 
+    let shapes_iter = (0..shapes.len()).into_iter().cycle();
     let mut moves_iter = moves.iter().cycle();
     let mut field2 = Field::new();
-    for shape in shapes.iter().cycle().take(PART2_SHAPES) {
+    let dt = time::Instant::now();
+    for (n, shape_idx) in shapes_iter.take(PART2_SHAPES).enumerate() {
+        let shape = shapes[shape_idx];
+        for _ in 0..3 {
+            let shift = moves_iter.next().expect("corrupted cycle iterator");
+            field2.shift_to_unchecked(*shift, &shape);
+        }
         loop {
-            let shift = moves_iter.next().ok_or_else(|| err!("endless iter"))?;
-            field2.shift_to(*shift, shape); 
-            if !field2.fall_down(shape) {
+            let shift = moves_iter.next().expect("corrupted cycle iterator");
+            field2.shift_to(*shift, &shape);
+            if !field2.fall_down(&shape) {
                 break
             }
         }
-        field2.record(shape);
+        field2.record(&shape);
+        // if n + 1 == k {
+        //     println!("{}", PrettyBits(&field2.field));
+        // }
+        if n > 0 && n % 100_000 == 0 {
+            let x = n as f64 / PART2_SHAPES as f64;
+            print!("  done {:08.4}%    {:?}\r", 100_f64 * x, dt.elapsed());
+        }
     }
+    println!("\n===========================================");
+    // println!("{}", PrettyBits(&field2.field));
 
-    Ok((field1.total_height(), field2.height()))
+    Ok((field1.total_height(), field2.total_height()))
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -97,6 +117,7 @@ enum Shift {
 struct Field {
     x: usize,
     y: usize,
+    h: usize,
     total_height: usize,
     field: Vec<u8>,
 }
@@ -105,16 +126,14 @@ impl Field {
     fn new() -> Field {
         Field {
             x: 2,
-            y: 3,
+            y: 0,
             total_height: 0,
+            h: 0,
             field: [0].repeat(3 + 4),
         }
     }
-    fn height(&self) -> usize {
-        self.field.iter().take_while(|&&x| x > 0).count()
-    }
     fn total_height(&self) -> usize {
-        self.total_height + self.height()
+        self.total_height + self.h
     }
     fn record(&mut self, shape: &Shape) {
         if self.field.len() - self.y < 4 {
@@ -126,10 +145,11 @@ impl Field {
         }
         if let Some(idx) = self.field.iter().position(|&byte| byte == 0b0111_1111_u8) {
             self.total_height += idx + 1;
-            self.field.drain(..=idx);
+            self.field = self.field.split_off(idx + 1);
         }
         self.x = 2;
-        self.y = self.height() + 3;
+        self.h = self.field.iter().take_while(|&&x| x > 0).count();
+        self.y = self.h;
     }
     fn shift_to(&mut self, shift: Shift, shape: &Shape) {
         let w = shape.width();
@@ -144,9 +164,19 @@ impl Field {
         }
         self.x = x;
     }
+    fn shift_to_unchecked(&mut self, shift: Shift, shape: &Shape) {
+        let w = shape.width();
+        let x = match shift {
+            Shift::Left if self.x == 0 => return,
+            Shift::Left => self.x - 1,
+            Shift::Right if self.x == 7 - w => return,
+            Shift::Right => self.x + 1,
+        };
+        self.x = x;
+    }
     fn fall_down(&mut self, shape: &Shape) -> bool {
         let y = match self.y.checked_sub(1) {
-            Some(y) if y > self.height() => y,
+            Some(y) if y > self.h => y,
             Some(y) => {
                 let field = self.get_field(y);
                 if collision(field, shape.bit_shape(self.x)) {
