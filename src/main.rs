@@ -1,7 +1,7 @@
 use std::env;
 
 use advent2022::{day1, day2, day3, day4, day5, day6, day7, day8, day9, day10, day11, day12, day13};
-use advent2022::{day14, day15, day16, day17, day18, day19, day20};
+use advent2022::{day14, day15, day16, day17, day18, day19, day20, day21, day22};
 
 static DAY1: &str = include_str!("./input/day01.txt");
 static DAY2: &str = include_str!("./input/day02.txt");
@@ -23,6 +23,8 @@ static DAY17: &str = include_str!("./input/day17.txt");
 static DAY18: &str = include_str!("./input/day18.txt");
 static DAY19: &str = include_str!("./input/day19.txt");
 static DAY20: &str = include_str!("./input/day20.txt");
+static DAY21: &str = include_str!("./input/day21.txt");
+static DAY22: &str = include_str!("./input/day22.txt");
 
 fn main() -> anyhow::Result<()> {
     let day = env::args()
@@ -127,6 +129,16 @@ fn main() -> anyhow::Result<()> {
         }
         20 => {
             let (answer1, answer2) = day20::main(DAY20)?;
+            println!("#1: {}", answer1);
+            println!("#2: {}", answer2);
+        }
+        21 => {
+            let (answer1, answer2) = day21::main(DAY21)?;
+            println!("#1: {}", answer1);
+            println!("#2: {}", answer2);
+        }
+        22 => {
+            let (answer1, answer2) = day22::main(DAY22)?;
             println!("#1: {}", answer1);
             println!("#2: {}", answer2);
         }
